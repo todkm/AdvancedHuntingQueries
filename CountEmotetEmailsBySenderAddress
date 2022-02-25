@@ -1,0 +1,9 @@
+// Count emails that have attachments marked as 'Emotet' by Defender for O365, by Envelop From addresses and Header From addresses
+EmailEvents 
+| where Timestamp >= ago(30d)
+| where ThreatNames contains 'Emotet'
+// if EnvelopFrom is different from HeaderFrom, mark the log as spoof suspected
+| extend SpoofSuspected = case(SenderFromAddress != SenderMailFromAddress, "Yes", "No")
+| summarize logCount=count() by SenderFromDomain, SenderFromAddress, SenderMailFromDomain, SenderMailFromAddress, SpoofSuspected
+| order by logCount desc
+| project EnvelopFromDomain=SenderMailFromDomain, EnvelopFrom=SenderMailFromAddress, HeaderFromDomain=SenderMailFromDomain, HeaderFrom=SenderFromAddress, SpoofSuspected, logCount
